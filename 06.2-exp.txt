@@ -1,0 +1,39 @@
+//6(B):client 
+import socket
+import os
+
+HOST = "127.0.0.1"
+PORT = 12345
+
+filename = input("Enter the file name to send: ")
+
+if not os.path.isfile(filename):
+    print("Error: File not found!")
+else:
+    try:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as client:
+            client.connect((HOST, PORT))
+
+            # Send the file name
+            name = os.path.basename(filename).encode("utf-8")
+            client.sendall(len(name).to_bytes(4, "big"))
+            client.sendall(name)
+
+            # Send the file size
+            filesize = os.path.getsize(filename)
+            client.sendall(filesize.to_bytes(8, "big"))
+
+            # Send the file contents
+            with open(filename, "rb") as file:
+                while True:
+                    data = file.read(4096)
+                    if not data:
+                        break
+                    client.sendall(data)
+
+            print("File sent successfully!")
+
+    except ConnectionRefusedError:
+        print("Error: Start the server first.")
+    except OSError as error:
+        print("File transfer failed:", error)
