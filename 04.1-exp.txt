@@ -1,0 +1,66 @@
+TCP Echo Server and Echo Client using Python sockets.
+
+// 4(a),Echo Server:
+
+import socket
+
+HOST = "127.0.0.1"
+PORT = 12345
+
+server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+
+server_socket.bind((HOST, PORT))
+server_socket.listen(1)
+
+print("TCP Echo Server is running...")
+print(f"Waiting for a client on {HOST}:{PORT}")
+
+try:
+    conn, addr = server_socket.accept()
+
+    with conn:
+        print("Connected by:", addr)
+
+        while True:
+            data = conn.recv(1024)
+
+            if not data:
+                break
+
+            message = data.decode()
+            print("Client:", message)
+
+            conn.sendall(data)
+
+    print("Client disconnected.")
+
+finally:
+    server_socket.close()
+
+
+import socket
+
+HOST = "127.0.0.1"
+PORT = 12345
+
+client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+try:
+    client_socket.connect((HOST, PORT))
+    print("Connected to TCP Echo Server.")
+    print("Type 'exit' to disconnect.")
+
+    while True:
+        message = input("Enter message: ")
+
+        if message.lower() == "exit":
+            break
+
+        client_socket.sendall(message.encode())
+
+        data = client_socket.recv(1024)
+        print("Echo from server:", data.decode())
+
+finally:
+    client_socket.close()
