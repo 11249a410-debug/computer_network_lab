@@ -1,0 +1,26 @@
+//4(b),Echo Client:
+import socket
+
+HOST = "127.0.0.1"
+PORT = 12345
+
+client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+try:
+    client_socket.connect((HOST, PORT))
+    print("Connected to TCP Echo Server.")
+    print("Type 'exit' to disconnect.")
+
+    while True:
+        message = input("Enter message: ")
+
+        if message.lower() == "exit":
+            break
+
+        client_socket.sendall(message.encode())
+
+        data = client_socket.recv(1024)
+        print("Echo from server:", data.decode())
+
+finally:
+    client_socket.close()
