@@ -1,0 +1,88 @@
+// 5(B):chat client
+
+import socket
+import threading
+
+# Server IP address and port number
+HOST = "127.0.0.1"
+PORT = 12345
+
+
+# Function to receive messages from the server
+def receive_messages(client_socket):
+    while True:
+        try:
+            # Receive data from the server
+            data = client_socket.recv(1024)
+
+            # Check whether the server disconnected
+            if not data:
+                print("\nServer disconnected.")
+                break
+
+            # Convert received bytes into a string
+            message = data.decode("utf-8")
+
+            # Display the received message
+            print(f"\nReceived message: {message}")
+            print("Enter message: ", end="", flush=True)
+
+        except OSError:
+            # Stop receiving if the connection closes
+            break
+
+
+# Create a TCP socket
+client_socket = socket.socket(
+    socket.AF_INET,
+    socket.SOCK_STREAM
+)
+
+try:
+    # Connect to the chat server
+    client_socket.connect((HOST, PORT))
+
+    print("================================")
+    print("       TCP CHAT CLIENT")
+    print("================================")
+    print("Connected to the chat server!")
+    print("Type /quit to exit the chat.")
+
+    # Create a separate thread to receive messages
+    receive_thread = threading.Thread(
+        target=receive_messages,
+        args=(client_socket,),
+        daemon=True
+    )
+
+    # Start the receiving thread
+    receive_thread.start()
+
+    # Send messages to the server
+    while True:
+        message = input("Enter message: ")
+
+        # Exit the chat when the user types /quit
+        if message.strip().lower() == "/quit":
+            break
+
+        # Send only non-empty messages
+        if message.strip():
+            client_socket.sendall(message.encode("utf-8"))
+
+except ConnectionRefusedError:
+    print("Connection failed!")
+    print("Please start the chat server first.")
+
+except (OSError, EOFError) as error:
+    print("Error:", error)
+
+finally:
+    # Close the client connection
+    try:
+        client_socket.shutdown(socket.SHUT_RDWR)
+    except OSError:
+        pass
+
+    client_socket.close()
+    print("Chat client disconnected.")
