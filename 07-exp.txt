@@ -1,0 +1,36 @@
+// 7:ARP protocol 
+
+from scapy.all import ARP, Ether, srp
+
+# Step 1: Get the target IP address
+target_ip = input("Enter the target IP address: ")
+
+# Step 2: Create an ARP request
+arp_request = ARP(pdst=target_ip)
+
+# Step 3: Create an Ethernet broadcast frame
+ethernet_frame = Ether(dst="ff:ff:ff:ff:ff:ff")
+
+# Step 4: Combine Ethernet frame and ARP request
+packet = ethernet_frame / arp_request
+
+# Step 5: Send the request and wait for a reply
+print("\nSending ARP request...")
+
+answered, unanswered = srp(
+    packet,
+    timeout=3,
+    verbose=False
+)
+
+# Step 6: Display the result
+if answered:
+    print("\nARP Response Received")
+    print("---------------------")
+
+    for sent_packet, received_packet in answered:
+        print("IP Address  :", received_packet.psrc)
+        print("MAC Address :", received_packet.hwsrc)
+else:
+    print("\nNo ARP response received.")
+    print("Check the IP address and network connection.")
