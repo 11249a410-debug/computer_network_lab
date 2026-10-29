@@ -1,0 +1,104 @@
+//# Experiment: Distance Vector Routing Algorithm using NS2
+
+# File name: distance_vector.tcl
+# ---------------------------------------------------------
+
+# Step 1: Create simulator
+set ns [new Simulator]
+
+# Step 2: Create trace file
+set tracefile [open distance_vector.tr w]
+$ns trace-all $tracefile
+
+# Step 3: Create NAM animation file
+set namfile [open distance_vector.nam w]
+$ns namtrace-all $namfile
+
+# Step 4: Define colors for traffic
+$ns color 1 Blue
+
+# Step 5: Create finish procedure
+proc finish {} {
+    global ns tracefile namfile
+
+    $ns flush-trace
+
+    close $tracefile
+    close $namfile
+
+    puts "===================================="
+    puts "Distance Vector Simulation Completed"
+    puts "Trace file: distance_vector.tr"
+    puts "NAM file: distance_vector.nam"
+    puts "===================================="
+
+    exit 0
+}
+
+# Step 6: Create four nodes
+set n0 [$ns node]
+set n1 [$ns node]
+set n2 [$ns node]
+set n3 [$ns node]
+
+# Step 7: Assign labels to nodes
+$n0 label "Source"
+$n1 label "Router A"
+$n2 label "Router B"
+$n3 label "Destination"
+
+# Step 8: Create bidirectional network links
+# Syntax: node1 node2 bandwidth delay queue_type
+
+$ns duplex-link $n0 $n1 2Mb 10ms DropTail
+$ns duplex-link $n0 $n2 2Mb 15ms DropTail
+$ns duplex-link $n1 $n3 2Mb 10ms DropTail
+$ns duplex-link $n2 $n3 2Mb 15ms DropTail
+$ns duplex-link $n1 $n2 1Mb 10ms DropTail
+
+# Step 9: Configure NAM link positions
+$ns duplex-link-op $n0 $n1 orient right-up
+$ns duplex-link-op $n0 $n2 orient right-down
+$ns duplex-link-op $n1 $n3 orient right-down
+$ns duplex-link-op $n2 $n3 orient right-up
+$ns duplex-link-op $n1 $n2 orient right
+
+# Step 10: Enable Distance Vector routing
+$ns rtproto DV
+
+# Step 11: Create UDP sender agent
+set udp [new Agent/UDP]
+$udp set packetSize_ 512
+$udp set fid_ 1
+
+# Attach UDP sender to source node
+$ns attach-agent $n0 $udp
+
+# Step 12: Create UDP receiver agent
+set null [new Agent/Null]
+
+# Attach receiver to destination node
+$ns attach-agent $n3 $null
+
+# Connect sender and receiver
+$ns connect $udp $null
+
+# Step 13: Create Constant Bit Rate traffic
+set cbr [new Application/Traffic/CBR]
+$cbr set packetSize_ 512
+$cbr set interval_ 0.05
+$cbr set random_ false
+
+# Attach CBR application to UDP
+$cbr attach-agent $udp
+
+# Step 14: Schedule traffic
+$ns at 0.5 "$cbr start"
+$ns at 8.0 "$cbr stop"
+
+# Step 15: Finish the simulation
+$ns at 9.0 "finish"
+
+# Step 16: Run the simulator
+puts "Starting Distance Vector Routing Simulation..."
+$ns run
